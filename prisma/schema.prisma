@@ -1,0 +1,70 @@
+generator client {
+  provider = "prisma-client" // new Rust-free client
+  /**
+   * Note to self: enure TS imports match (import { PrismaClient } from '../generated/prisma' etc.)
+   */
+  output   = "../src/generated/prisma"
+}
+
+/**
+ * Just FYI: In Prisma 7, the datasource "url" propery is no longer supported
+ * in schema files. The new pattern is to put the connection URL into a
+ * `/prisma.config.ts`file instead of putting it directly in the schema.
+ * I looked into it, and the reasoning behind this new pattern is so that the
+ * prisma schema remains focused on data modelling, and environment-specific
+ * configs are centralized in the config file
+ */
+datasource db {
+  // Using PostgreSQL for Railway deployment
+  provider = "postgresql"
+}
+
+model Author {
+  id    String @id @default(uuid())
+  name  String
+  notes Note[] // One-to-many relationship
+}
+
+model Note {
+  id        String   @id @default(uuid())
+  title     String
+  /**
+   * I decided to leave this field optional to support "title-only" notes
+   */
+  content   String?
+  authorId  String // foreign key for Author.id
+  author    Author   @relation(fields: [authorId], references: [id])
+  tags      Tag[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Indexes (commented out for assesment scope):
+  // Why skip indexes? Well, since this is a small assessment, tables will have < 100 rows.
+  // Postgres will scan small tables faster than using indexes, so no need to optimize here.
+  // But, for arguments sake, for a prod app with lots of data, we could add:
+  // @@index([createdAt])
+  //    - Optimizes "get all notes sorted by date" queries
+  // @@index([authorId, createdAt]) 
+  //    - Compound index for "get author's notes by date" queries
+  // No need for authorId index, since we have this compound index
+  // We dont need indexes for `content` or `title`, since these are long text fields. 
+  // For search functionality, we'd use full text search instead
+}
+
+/**
+ * Why a separate table for tags?
+ * My initial thought was to have a single "tags" column (string) in `Note` table,
+ * where each tag was separated by column (eg "javascript,typescript,web").
+ * I decided to use a separate table for a few reasons:
+ * 1. filtering would require string operations, which is probably less efficient.
+ * 2. cant easily get a list of all available tags
+ * 3. cant enforce unique tags across system, meaning we can have duplicate
+ * tags defined. This isnt a huge problem for this task, but it still means
+ * we would be storing redundant data in a production setting. A separate tags table
+ * means each tag is only defined *once*.
+ */
+model Tag {
+  id    String @id @default(uuid())
+  name  String @unique
+  notes Note[]
+}
