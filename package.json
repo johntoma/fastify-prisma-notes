@@ -4,9 +4,9 @@
   "description": "Ankor - Take Home Test",
   "main": "index.ts",
   "scripts": {
-    "start": "tsx src/index.ts",
+    "start": "npx prisma migrate deploy && tsx src/index.ts",
     "dev": "tsx watch src/index.ts",
-    "build": "npx prisma generate && npx prisma migrate deploy",
+    "build": "npx prisma generate",
     "test": "vitest"
   },
   "author": "",
