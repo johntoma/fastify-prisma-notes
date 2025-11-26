@@ -1,7 +1,7 @@
 {
-  "name": "ankor_take_home_test",
+  "name": "fastify_prisma_notes",
   "version": "1.0.0",
-  "description": "Ankor - Take Home Test",
+  "description": "Fastify Prisma Notes",
   "main": "index.ts",
   "scripts": {
     "start": "npx prisma migrate deploy && tsx src/index.ts",
